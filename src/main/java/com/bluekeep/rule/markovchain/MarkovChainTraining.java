@@ -36,15 +36,15 @@ public class MarkovChainTraining {
         // Create a 2D Probabilty Matrix following counts in the Alphabet Matrix
         probabilityMatrix = getProbabilityMatrix(alphabetMatrix);
 
-        notRandomUsername.add("jsmith");
-        notRandomUsername.add("mgarcia");
-        notRandomUsername.add("mrodriguez");
-        notRandomUsername.add("mhernandez");
-        notRandomUsername.add("jjohnson");
+        notRandomUsername.add("jianwu");
+        notRandomUsername.add("lisj");
+        notRandomUsername.add("tangcl");
+        notRandomUsername.add("haobc");
+        notRandomUsername.add("huangfc");
         notRandomUsername.add("knguyen");
-        notRandomUsername.add("dgriffith");
-        notRandomUsername.add("tpatrick");
-        notRandomUsername.add("aanderson");
+        notRandomUsername.add("chengk");
+        notRandomUsername.add("yangfan02");
+        notRandomUsername.add("zhouzhou");
 
         randomUsername.add("iaDz2xEdjyPb0");
         randomUsername.add("laPBnNN0RLPbF");

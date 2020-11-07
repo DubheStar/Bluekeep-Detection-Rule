@@ -14,7 +14,8 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.node.Obje
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
+import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkFunction;
 import org.apache.flink.streaming.connectors.elasticsearch.RequestIndexer;
@@ -28,6 +29,7 @@ import org.elasticsearch.client.Requests;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
@@ -120,14 +122,15 @@ public class BluekeepDetection {
 				Integer eventId = jsonNodes.get("value").get("winlog").get("event_id").asInt();
 				return (eventId == 1149 || eventId == 3 || eventId == 1);
 			}
-		}).assignTimestampsAndWatermarks(new AscendingTimestampExtractor<ObjectNode>() {
-			@Override
-			public long extractAscendingTimestamp(ObjectNode jsonNodes) {
-				// Keep event order following date in "Event.Created" field.
-				Long eventCreateTimeStamp = Instant.parse(jsonNodes.get("value").get("event").get("created").asText()).toEpochMilli();
-				return eventCreateTimeStamp;
-			}
-		});
+		}).assignTimestampsAndWatermarks(WatermarkStrategy.<ObjectNode>forBoundedOutOfOrderness(Duration.ofSeconds(3))
+				.withTimestampAssigner(new SerializableTimestampAssigner<ObjectNode>() {
+					@Override
+					public long extractTimestamp(ObjectNode jsonNodes, long recordTimestamp) {
+						// Keep event order following date in "Event.Created" field.
+						Long eventCreateTimeStamp = Instant.parse(jsonNodes.get("value").get("event").get("created").asText()).toEpochMilli();
+						return eventCreateTimeStamp;
+					}
+		}));
 
 		// Send Events to Elasticsearch
 		windowsBluekeepStream.map(ObjectNode::toString).addSink(esSinkDataBuilder.build());
